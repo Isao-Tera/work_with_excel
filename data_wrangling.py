@@ -121,27 +121,35 @@ def conver_long(df_extracted, converted_type="actual", keep_col=names):
     return df_converted
 
 def trans_date(x):
+    """モールド予算または実績の月をdate型に変換する関数
+    Args:
+        x: pandas series 文字列で1月から12月までのデータがある
+            予算：Y1st(OB)/N月
+            実績：発注面数N月
+    Returns:
+        datetime
+    """
     if "1月" in x:
-        pd.to_datetime(str(dt.today().year) + "/" + "1")
+        return pd.to_datetime(str(dt.today().year) + "/" + "1")
     elif "2月" in x:
-        pd.to_datetime(str(dt.today().year) + "/" + "2")
+        return pd.to_datetime(str(dt.today().year) + "/" + "2")
     elif "3月" in x:
-        pd.to_datetime(str(dt.today().year) + "/" + "3")
+        return pd.to_datetime(str(dt.today().year) + "/" + "3")
     elif "4月" in x:
-        pd.to_datetime(str(dt.today().year) + "/" + "4")
+        return pd.to_datetime(str(dt.today().year) + "/" + "4")
     elif "5月" in x:
-        pd.to_datetime(str(dt.today().year) + "/" + "5")
+        return pd.to_datetime(str(dt.today().year) + "/" + "5")
     elif "6月" in x:
-        pd.to_datetime(str(dt.today().year) + "/" + "6")
+        return pd.to_datetime(str(dt.today().year) + "/" + "6")
     elif "7月" in x:
-        pd.to_datetime(str(dt.today().year) + "/" + "7")
+        return pd.to_datetime(str(dt.today().year) + "/" + "7")
     elif "8月" in x:
-        pd.to_datetime(str(dt.today().year) + "/" + "8")
+        return pd.to_datetime(str(dt.today().year) + "/" + "8")
     elif "9月" in x:
-        pd.to_datetime(str(dt.today().year) + "/" + "9")
+        return pd.to_datetime(str(dt.today().year) + "/" + "9")
     elif "10月" in x:
-        pd.to_datetime(str(dt.today().year) + "/" + "10")
+        return pd.to_datetime(str(dt.today().year) + "/" + "10")
     elif "11月" in x:
-        pd.to_datetime(str(dt.today().year) + "/" + "11")
+        return pd.to_datetime(str(dt.today().year) + "/" + "11")
     elif "12月" in x:
-        pd.to_datetime(str(dt.today().year) + "/" + "12")
+        return pd.to_datetime(str(dt.today().year) + "/" + "12")

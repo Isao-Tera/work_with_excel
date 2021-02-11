@@ -1,5 +1,6 @@
 # Libraries
 import pandas as pd
+from datetime import datetime as dt
 
 # Load data
 df = pd.read_excel(
@@ -45,17 +46,32 @@ actual_mold_num = [
     "発注面数11月",
     "発注面数12月"]
 
+budget_mold_num = [
+    "Y1st(OB)/1月",
+    "Y1st(OB)/2月",
+    "Y1st(OB)/3月",
+    "Y1st(OB)/4月",
+    "Y1st(OB)/5月",
+    "Y1st(OB)/6月",
+    "Y1st(OB)/7月",
+    "Y1st(OB)/8月",
+    "Y1st(OB)/9月",
+    "Y1st(OB)/10月",
+    "Y1st(OB)/11月",
+    "Y1st(OB)/12月"]
+
 # Select necessary columns
-def select_columns(df, col_names):
+def select_columns(df, col_items, col_value):
     """データ集計に必要な列を選択する関数
     Args:
         df: モールド実績データのExcelファイルをpandasで読み込んだdataframe
-        col_names: リスト形式の列名
+        col_items: リスト形式 予算No.など属性(names)を表す列
+        col_value: リスト形式　予算の値(budget_mold_num) or 実績の値(actual_mold_num)がある列
     Returns:
         df_selected: 必要な列名のみ選択したdataframe
     """
-    col_names = names + actual_mold_num
-    df_selected = df[names]
+    col_names = col_items + col_value
+    df_selected = df[col_names]
     return df_selected
 
 #df_s = select_columns(df, col_names)
@@ -63,7 +79,7 @@ def select_columns(df, col_names):
 
 
 # Filter necessary rows
-unit_names = [2021, 2022]
+# unit_names = [2021, 2022]
 
 def filter_rows(df):
     """データ集計に必要な行を選択する関数
@@ -103,3 +119,29 @@ def conver_long(df_extracted, converted_type="actual", keep_col=names):
 
     df_converted = df_extracted.melt(id_vars=keep_col, var_name=var_name, value_name=value_name)
     return df_converted
+
+def trans_date(x):
+    if "1月" in x:
+        pd.to_datetime(str(dt.today().year) + "/" + "1")
+    elif "2月" in x:
+        pd.to_datetime(str(dt.today().year) + "/" + "2")
+    elif "3月" in x:
+        pd.to_datetime(str(dt.today().year) + "/" + "3")
+    elif "4月" in x:
+        pd.to_datetime(str(dt.today().year) + "/" + "4")
+    elif "5月" in x:
+        pd.to_datetime(str(dt.today().year) + "/" + "5")
+    elif "6月" in x:
+        pd.to_datetime(str(dt.today().year) + "/" + "6")
+    elif "7月" in x:
+        pd.to_datetime(str(dt.today().year) + "/" + "7")
+    elif "8月" in x:
+        pd.to_datetime(str(dt.today().year) + "/" + "8")
+    elif "9月" in x:
+        pd.to_datetime(str(dt.today().year) + "/" + "9")
+    elif "10月" in x:
+        pd.to_datetime(str(dt.today().year) + "/" + "10")
+    elif "11月" in x:
+        pd.to_datetime(str(dt.today().year) + "/" + "11")
+    elif "12月" in x:
+        pd.to_datetime(str(dt.today().year) + "/" + "12")

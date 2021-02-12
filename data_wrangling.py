@@ -153,3 +153,19 @@ def trans_date(x):
         return pd.to_datetime(str(dt.today().year) + "/" + "11")
     elif "12月" in x:
         return pd.to_datetime(str(dt.today().year) + "/" + "12")
+
+def trans_to_date(x):
+    """モールド予算または実績の月をdate型に変換する関数
+    Args:
+        x: pandas series 文字列で1月から12月までのデータがある
+            予算：Y1st(OB)/N月
+            実績：発注面数N月
+    Returns:
+        datetime
+    """
+    # 下記ロジックでは昇順の場合、発注面数12月　は2月と判断される。
+    # 回避のため降順にループ処理を設定する
+    for i in reversed(range(1,13)):
+        mon_str = f"{i}月"
+        if mon_str in x:
+            return pd.to_datetime(str(dt.today().year) + "/" + f"{i}")

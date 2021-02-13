@@ -1,14 +1,15 @@
-# Libraries
+# Libraries　
 import pandas as pd
 from datetime import datetime as dt
 
-# Load data
-df = pd.read_excel(
-    "②【一般モールド】20-23年サイズ別明細(12.23展開).xlsx", 
-    sheet_name="21OB_MBP",
-    header=3)
 
-# Neccerary columns
+# ローカルに保存したExcelファイルを読み込む場合
+path = "②【一般モールド】20-23年サイズ別明細(12.23展開).xlsx"
+sheet_name = "21OB_MBP"
+header = 3
+
+
+# Excelから抽出が必要な列名
 names = [
     "需要カウント",
     "9042付与セリアル(管理)番号",
@@ -60,6 +61,37 @@ budget_mold_num = [
     "Y1st(OB)/11月",
     "Y1st(OB)/12月"]
 
+# Excelファイルから抽出が必要な行
+units = [2021, 2022]
+count_flag = ["Y"]
+
+
+# Main Function
+def main():
+    df = load_excel(path, sheet_name, header)
+    selected_df = select_columns(df, names, budget_mold_num)
+    filtered_df = filter_rows(selected_df, units=units, count_flag=count_flag)
+    converted_df = convert_long(filtered_df, convert_type="budget")
+    return converted_df
+
+
+# Load data
+"""pandasを使ってExcelファイルを読み込む関数
+Args:
+    path: 文字列　S3のURL？
+    sheet_name: 文字列　予算や実績データがあるExcelシート名
+    header: 整数型　読み込みをスキップする行数
+Returns:
+    df: dataframe 
+"""
+def load_excel(path, sheet_name, header):
+    df = pd.read_excel(
+        path,
+        sheet_name=sheet_name,
+        header=header)
+    return df
+
+
 # Select necessary columns
 def select_columns(df, col_items, col_value):
     """データ集計に必要な列を選択する関数
@@ -74,36 +106,30 @@ def select_columns(df, col_items, col_value):
     df_selected = df[col_names]
     return df_selected
 
-df_s = select_columns(df, names, budget_mold_num)
-#print(df_s.head())
-
 
 # Filter necessary rows
-# unit_names = [2021, 2022]
-
-def filter_rows(df, units):
+def filter_rows(df, count_flag, units):
     """データ集計に必要な行を選択する関数
     description:
-        需要カウント: モールド実績を集計が必要なフラグ（"Y"）のみ
-        申請部署: 商品計画部[2021, 2022]のみ
-        予算管理#: naは予算を実行化できないため不要
+        需要カウント: データを集計が必要なフラグを示す列
+        申請部署: 予算申請部署を示す列、商品計画部は[2021, 2022]
+        予算管理#: 承認された予算を示す列
+        　　　　　 naは予算を実行化できないため不要
     Args:
         df: モールド実績データのExcelファイルをpandasで読み込んだdataframe
-        units: 集計対象となるモールド予算申請部署のリスト
+        units: 集計対象となる部署のリスト
+        count_flag: 集計フラグのリスト、基本は（"Y"）のみ
     Returns:
         df_filtered: 必要な行を抽出したdataframe
     """
-    df_filtered = df.query(f"需要カウント == 'Y' and 申請部署 in {units}").dropna(subset=["予算管理#"])
+    df_filtered = df.query(f"需要カウント in {count_flag} and 申請部署 in {units}").dropna(subset=["予算管理#"])
     return df_filtered
 
-units = [2021, 2022]
-df_f = filter_rows(df_s, units=units)
-#print(df_f.head())
-
-def trans_to_date(x):
+# Convert a String to Datetime
+def convert_to_date(df_col):
     """モールド予算または実績の月をdate型に変換する関数
     Args:
-        x: pandas series 文字列で1月から12月までのデータがある
+        df_col: pandas series 文字列で1月から12月までのデータがある
             予算：Y1st(OB)/N月
             実績：発注面数N月
     Returns:
@@ -113,7 +139,7 @@ def trans_to_date(x):
     # 回避のため降順にループ処理を設定する
     for i in reversed(range(1,13)):
         mon_str = f"{i}月"
-        if mon_str in x:
+        if mon_str in df_col:
             return pd.to_datetime(str(dt.today().year) + "/" + f"{i}")
 
 
@@ -126,22 +152,23 @@ def convert_long(df_extracted, convert_type="actual", keep_col=names):
         convert_type: 予算ファイルならば"budget", 実績ファイルなら"actual"と指定する
         keep_col: 列のまま保持する列名のList　namesというグローバル変数をデフォルト設定
     Returns:
-        df_melted: dataframe wide to long 
+        df_melted: dataframe (縦長の形式) 
     """
     if convert_type == "actual":
         var_name="actual_month"
         value_name="a_mold_num"
         df_melted = df_extracted.melt(id_vars=keep_col, var_name=var_name, value_name=value_name)
-        # transform datatype string to datetime
-        df_melted[var_name] = df_melted[var_name].apply(trans_to_date)
+        # 各月のデータがある列は、文字列（発注面数1月など）となっているので、日付型に変換する
+        df_melted[var_name] = df_melted[var_name].apply(convert_to_date)
 
     elif convert_type == "budget":
         var_name="budget_month"
         value_name="b_mold_num"
         df_melted = df_extracted.melt(id_vars=keep_col, var_name=var_name, value_name=value_name)
-        df_melted[var_name] = df_melted[var_name].apply(trans_to_date)
+        df_melted[var_name] = df_melted[var_name].apply(convert_to_date)
 
     return df_melted
+ 
 
-df_c = convert_long(df_f, convert_type="budget")
-print(df_c.head())
+if __name__ == "__main__":
+    main()

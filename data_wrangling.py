@@ -135,7 +135,7 @@ def convert_to_date(df_col):
     Returns:
         datetime
     """
-    # 下記ロジックでは昇順の場合、発注面数12月　は2月と判断される。
+    # ループ処理が昇順の場合、発注面数12月　は2月、発注面数11月　は1月と判断される。
     # 回避のため降順にループ処理を設定する
     for i in reversed(range(1,13)):
         mon_str = f"{i}月"

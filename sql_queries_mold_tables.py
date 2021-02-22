@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS budget_info(
     plant char(2),
     product_name varchar,
     description text,
-    o/r/e varchar,
+    o_r_e varchar,
     oe_code varchar,
     vehicle varchar,
     tire_grp char(3),
@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS actual_info(
     plant char(2),
     product_name varchar,
     description text,
-    o/r/e varchar,
+    o_r_e varchar,
     oe_code varchar,
     vehicle varchar,
     tire_grp char(3),
@@ -81,7 +81,7 @@ budget_info_insert = ("""
         plant,
         product_name,
         description,
-        o/r/e,
+        o_r_e,
         oe_code,
         vehicle,
         tire_grp,
@@ -139,7 +139,7 @@ actual_info_insert = ("""
         plant,
         product_name,
         description,
-        o/r/e,
+        o_r_e,
         oe_code,
         vehicle,
         tire_grp,
@@ -188,5 +188,5 @@ actual_num_insert = ("""
 )
 
 # Queries List
-create_tables_queries = [budget_info_create, budget_num_create, actual_info_create, actual_num_create]
-drop_tables_queries = [budget_info_drop, budget_num_drop, actual_info_drop, actual_num_drop]
+create_table_queries = [budget_info_create, budget_num_create, actual_info_create, actual_num_create]
+drop_table_queries = [budget_info_drop, budget_num_drop, actual_info_drop, actual_num_drop]

@@ -65,14 +65,47 @@ budget_mold_num = [
 units = [2021, 2022]
 count_flag = ["Y"]
 
+# 英語の列名
+new_colname = [
+    "count_flag",
+    "serial_no",
+    "budget_no",
+    "apply_unit",
+    "exchange_no",
+    "status",
+    "sokei_no",
+    "plant",
+    "product_name",
+    "description",
+    "o_r_e",
+    "oe_code",
+    "vehicle",
+    "tire_grp",
+    "li",
+    "ss",
+    "sec",
+    "sr",
+    "rim",
+    "mpp_info",
+    "unit_price",
+    "year_month",
+    "mold_num"
+]
 
 # Main Function
 def main():
     df = load_excel(path, sheet_name, header)
-    selected_df = select_columns(df, names, budget_mold_num)
-    filtered_df = filter_rows(selected_df, units=units, count_flag=count_flag)
-    converted_df = convert_long(filtered_df, convert_type="budget")
-    return converted_df
+    
+    # tidying data using pipe
+    converted_df = (df.pipe(select_columns, names, budget_mold_num)
+                      .pipe(filter_rows, units=units,count_flag=count_flag)
+                      .pipe(convert_long, convert_type="budget")
+                   )
+    # Rename column name for database
+    converted_df.columns = new_colname
+
+    # Output a csv file
+    converted_df.to_csv("tidy_mold.csv", index=False)
 
 
 # Load data

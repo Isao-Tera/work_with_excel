@@ -114,7 +114,7 @@ budget_info_insert = ("""
     )"""
 )
 
-buget_num_insert = ("""
+budget_num_insert = ("""
     INSERT INTO budget_num(
         serial_no,
         budget_no,
@@ -190,3 +190,10 @@ actual_num_insert = ("""
 # Queries List
 create_table_queries = [budget_info_create, budget_num_create, actual_info_create, actual_num_create]
 drop_table_queries = [budget_info_drop, budget_num_drop, actual_info_drop, actual_num_drop]
+insert_queries = [budget_info_insert, budget_num_insert, actual_info_insert, actual_num_insert]
+insert_dict = {
+    "b_info": budget_info_insert,
+    "b_num": budget_num_insert,
+    "a_info": actual_info_insert,
+    "a_num": actual_num_insert
+}

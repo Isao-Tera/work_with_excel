@@ -1,8 +1,8 @@
 # Drop tables
-budget_info_drop = "DROP TABLES IF EXISTS budget_info"
-budget_num_drop = "DROP TABLES IF EXISTS budget_num"
-actual_info_drop = "DROP TABLES IF EXISTS actual_info"
-actual_num_drop = "DROP TABLES IF EXISTS actual_num"
+budget_info_drop = "DROP TABLE IF EXISTS budget_info"
+budget_num_drop = "DROP TABLE IF EXISTS budget_num"
+actual_info_drop = "DROP TABLE IF EXISTS actual_info"
+actual_num_drop = "DROP TABLE IF EXISTS actual_num"
 
 # Create tables
 
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS budget_info(
 
 
 budget_num_create = ("""
-CREATE TABLE IF NOT EXITSTS mold_buget(
+CREATE TABLE IF NOT EXISTS  mold_buget(
     serial_no varchar PRIMARY KEY,
     budget_no varchar,
     unit_price int,
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS actual_info(
 )
 
 actual_num_create = ("""
-CREATE TABLE IF NOT EXITSTS actual_num(
+CREATE TABLE IF NOT EXISTS  actual_num(
     serial_no varchar,
     budget_no varchar PRIMARY KEY,
     ex_serial_no varchar,
@@ -191,9 +191,4 @@ actual_num_insert = ("""
 create_table_queries = [budget_info_create, budget_num_create, actual_info_create, actual_num_create]
 drop_table_queries = [budget_info_drop, budget_num_drop, actual_info_drop, actual_num_drop]
 insert_queries = [budget_info_insert, budget_num_insert, actual_info_insert, actual_num_insert]
-insert_dict = {
-    "b_info": budget_info_insert,
-    "b_num": budget_num_insert,
-    "a_info": actual_info_insert,
-    "a_num": actual_num_insert
-}
+insert_dict = {"b_info":budget_info_insert,"b_num":budget_num_insert,"a_info":actual_info_insert,"a_num":actual_num_insert}

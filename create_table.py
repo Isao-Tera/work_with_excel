@@ -14,10 +14,14 @@ def create_tables(conn, cur):
         # Create tables one by one
         commands = create_table_queries
         for command in commands:
-            cur.exectute(command)
+            cur.execute(command)
         conn.commit()
+        print("Success! Made mold data tables")
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
+    finally:
+        conn.close()
+        print("connection was closed")
 
 def drop_tables(conn, cur):
     """テーブルを削除する関数
@@ -30,7 +34,7 @@ def drop_tables(conn, cur):
     commands = drop_table_queries
     try:
         for command in commands:
-            cur.exectute(command)
+            cur.execute(command)
         conn.commit
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)

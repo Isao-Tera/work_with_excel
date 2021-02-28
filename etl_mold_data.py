@@ -1,10 +1,16 @@
 import os
 import glob
-import psycopg2
 import pandas as pd
 from sql_queries_mold_tables import insert_queries
+from connection_postgres import connection_postgres
 
-def insert_budgetdata(cur, filepath, query):
+def main():
+    conn, cur = connection_postgres()
+    process_molddata(conn, cur, filepath=r".\data", func=insert_budgetdata)
+    process_molddata(conn, cur, filepath=r".\data", func=insert_actualdata)
+    conn.close()
+
+def insert_budgetdata(cur, filepath):
     """loaclにある前処理後の予算データをテーブルに取り込む関数
     Args:
         cur: cursor object
@@ -13,99 +19,177 @@ def insert_budgetdata(cur, filepath, query):
         None
     """
     # Load tidy mold data
-    df = pd.read_csv(filepath)
+    data_type = {
+    'count_flag': 'object',
+    'serial_no': 'string',
+    'budget_no': 'object',
+    'apply_unit': 'object',
+    'exchange_no': 'object',
+    'status': 'object',
+    'sokei_no': 'object',
+    'plant': 'object',
+    'product_name': 'object',
+    'description': 'object',
+    'o_r_e': 'object',
+    'oe_code': 'object',
+    'vehicle': 'object',
+    'tire_grp': 'object',
+    'li': 'object',
+    'ss': 'object',
+    'sec': 'object',
+    'sr': 'object',
+    'rim': 'object',
+    'mpp_info': 'object',
+    'unit_price': 'float64',
+    'year_month': 'object',
+    'mold_num': 'float64'}
+    parse_date = ['year_month',]
+    df = pd.read_csv(filepath, dtype=data_type, parse_dates=parse_date)
 
     # Insert budget mold data into tables
-    if query == "budget_info_insert":
-        budget_info_df = df[
-            "serial_no",
-            "budget_no",
-            "apply_unit",
-            "status",
-            "sokei_no",
-            "plant",
-            "product_name",
-            "description",
-            "o_r_e",
-            "oe_code",
-            "vehicle",
-            "tire_grp",
-            "li",
-            "ss",
-            "sec",
-            "sr",
-            "rim",
-            "mpp_info"]
-        # Convert Dataframe to List to insert DB
-        listed_df = []
-        for row in budget_info_df.itertuples(name=None):
-            listed_df.append(list(row))
-        # Insert list values to DB
-        # insert_queries[0]; INSERT query for budget info. 
-        cur.execute(insert_queries[0], listed_df)
-    if query == "budget_num_insert":
-        budget_num_df = df[
-            "serial_no",
-            "budget_no",
-            "unit_price",
-            "budget_num"]
-        listed_df = []
-        for row in budget_num_df.itertuples(name=None):
-            listed_df.append(list(row))
-        # insert_queries[1]; INSERT query for budget mold number.
-        cur.execute(insert_queries[1], listed_df)
+    budget_info_df = df[[
+        "serial_no",
+        "budget_no",
+        "apply_unit",
+        "status",
+        "sokei_no",
+        "plant",
+        "product_name",
+        "description",
+        "o_r_e",
+        "oe_code",
+        "vehicle",
+        "tire_grp",
+        "li",
+        "ss",
+        "sec",
+        "sr",
+        "rim",
+        "mpp_info"
+    ]]
+    # 元データには月別モールド面数を情報を保持していたため、モールド情報テーブルでは、重複を削除する必要がある
+    budget_info_df.drop_duplicates(inplace=True)
+    budget_info_df["serial_no"] = budget_info_df["serial_no"].astype(str)
 
-def insert_actualdata(cur, filepath, query):
+    # Convert Dataframe to List to insert DB
+    for row in budget_info_df.itertuples(name=None, index=False):
+    # insert_queries[0]; INSERT query for budget info. 
+        cur.execute(insert_queries[0], list(row))
+
+    budget_num_df = df[[
+        "serial_no",
+        "budget_no",
+        "year_month",
+        "unit_price",
+        "budget_num"
+    ]]
+
+    # In the budget_num table, serial_no is the VARCHAR, year_month is date
+    budget_num_df["serial_no"] = budget_num_df["serial_no"].astype(str)
+    budget_num_df["year_month"] = pd.to_datetime(budget_num_df["year_month"])
+
+    for row in budget_num_df.itertuples(name=None, index=False):
+    # insert_queries[1]; INSERT query for budget mold number.
+        cur.execute(insert_queries[1], list(row))
+
+def insert_actualdata(cur, filepath):
     """loaclにある前処理後の実績データをテーブルに取り込む関数
     Args:
         cur: cursor object
         filepath: string, filepath to csvfiles
-        query: sql_queries_mold_tables.py からinsert文をインポート
     Returns:
         None
     """
-    df = pd.read_csv(filepath)
+    data_type = {
+    'count_flag': 'object',
+    'serial_no': 'string',
+    'budget_no': 'object',
+    'apply_unit': 'object',
+    'exchange_no': 'object',
+    'status': 'object',
+    'sokei_no': 'object',
+    'plant': 'object',
+    'product_name': 'object',
+    'description': 'object',
+    'o_r_e': 'object',
+    'oe_code': 'object',
+    'vehicle': 'object',
+    'tire_grp': 'object',
+    'li': 'object',
+    'ss': 'object',
+    'sec': 'object',
+    'sr': 'object',
+    'rim': 'object',
+    'mpp_info': 'object',
+    'unit_price': 'float64',
+    'year_month': 'object',
+    'mold_num': 'float64'}
+    parse_date = ['year_month',]
+    df = pd.read_csv(filepath, dtype=data_type, parse_dates=parse_date)
 
-    if query == "actual_info_insert":
-        actual_info_df = df[
-            "serial_no",
-            "budget_no",
-            "apply_unit",
-            "status",
-            "sokei_no",
-            "plant",
-            "product_name",
-            "description",
-            "o_r_e",
-            "oe_code",
-            "vehicle",
-            "tire_grp",
-            "li",
-            "ss",
-            "sec",
-            "sr",
-            "rim",
-            "mpp_info"
-        ]
-        listed_df = []
-        for row in actual_info_df.itertuples(name=None):
-            listed_df.append(row)
-        # insert_queries[2]; INSERT query for actual info.
-        cur.execute(insert_queries[2], listed_df)
+    actual_info_df = df[[
+        "serial_no",
+        "budget_no",
+        "apply_unit",
+        "status",
+        "sokei_no",
+        "plant",
+        "product_name",
+        "description",
+        "o_r_e",
+        "oe_code",
+        "vehicle",
+        "tire_grp",
+        "li",
+        "ss",
+        "sec",
+        "sr",
+        "rim",
+        "mpp_info"
+    ]]
 
-    if query == "actual_num_insert":
-        actual_num_df = df[
-            "serial_no",
-            "budget_no",
-            "ex_serial_no",
-            "actual_num"
-        ]
-        listed_df = []
-        for row in actual_num_df.itertuples(name=None):
-            listed_df.append(row)
-        # insert_queries[3]; INSERT query for actual mold number.
-        cur.execute(insert_queries[3], listed_df)
+    for row in actual_info_df.itertuples(name=None, index=False):
 
-def process_molddata(cur, conn, filepath, func):
+    # insert_queries[2]; INSERT query for actual info.
+        cur.execute(insert_queries[2], list(row))
+
+    actual_num_df = df[[
+        "serial_no",
+        "budget_no",
+        "ex_serial_no",
+        "year_month",
+        "unit_price",
+        "actual_num"
+    ]]
+    for row in actual_num_df.itertuples(name=None, index=False):
+    # insert_queries[3]; INSERT query for actual mold number.
+        cur.execute(insert_queries[3], list(row))
+
+def process_molddata(conn,cur, filepath, func):
+    """INSERT queryを実行する関数
+    Args:
+        conn:connectionクラス　conect to pastgresql at local
+        cur:cursor object
+        filepath: 前処理後のcsv fileパス　拡張子は除く
+        func: INSERTを処理する関数名　予算と実績のデータをテーブルへ入れる関数
     """
-    """
+    # get csv files from local folder
+    abspath_for_files = []
+    csv_files = glob.glob(os.path.join(filepath, "*mold.csv"))
+    for csvfile in csv_files:
+        abs_path = os.path.abspath(csvfile)
+        abspath_for_files.append(abs_path)
+
+    # total number of files
+    number_files = len(csv_files)
+    print(f"{number_files} files were found in {filepath}")
+
+    # iterate over files and process
+    for i, datafile in enumerate(abspath_for_files, 1):
+        func(cur, datafile)
+        conn.commit()
+        print(f"{i}/{number_files} files processed")
+
+if __name__ == "__main__":
+    main()
+

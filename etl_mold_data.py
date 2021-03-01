@@ -7,7 +7,7 @@ from connection_postgres import connection_postgres
 def main():
     conn, cur = connection_postgres()
     process_molddata(conn, cur, filepath=r".\data", func=insert_budgetdata)
-    process_molddata(conn, cur, filepath=r".\data", func=insert_actualdata)
+    #process_molddata(conn, cur, filepath=r".\data", func=insert_actualdata)
     conn.close()
 
 def insert_budgetdata(cur, filepath):
@@ -21,7 +21,7 @@ def insert_budgetdata(cur, filepath):
     # Load tidy mold data
     data_type = {
     'count_flag': 'object',
-    'serial_no': 'string',
+    'serial_no': 'object',
     'budget_no': 'object',
     'apply_unit': 'object',
     'exchange_no': 'object',
@@ -69,28 +69,25 @@ def insert_budgetdata(cur, filepath):
     ]]
     # 元データには月別モールド面数を情報を保持していたため、モールド情報テーブルでは、重複を削除する必要がある
     budget_info_df.drop_duplicates(inplace=True)
-    budget_info_df["serial_no"] = budget_info_df["serial_no"].astype(str)
+    
+    # Convert Dataframe to List in order to insert DB
+    # insert_queries[0]; INSERT query for budget information.
+    cur.executemany(insert_queries[0], budget_info_df.values.tolist())
 
-    # Convert Dataframe to List to insert DB
-    for row in budget_info_df.itertuples(name=None, index=False):
-    # insert_queries[0]; INSERT query for budget info. 
-        cur.execute(insert_queries[0], list(row))
-
+    # Insert budget number into a table
     budget_num_df = df[[
         "serial_no",
         "budget_no",
         "year_month",
         "unit_price",
-        "budget_num"
+        "mold_num"
     ]]
 
     # In the budget_num table, serial_no is the VARCHAR, year_month is date
     budget_num_df["serial_no"] = budget_num_df["serial_no"].astype(str)
     budget_num_df["year_month"] = pd.to_datetime(budget_num_df["year_month"])
-
-    for row in budget_num_df.itertuples(name=None, index=False):
     # insert_queries[1]; INSERT query for budget mold number.
-        cur.execute(insert_queries[1], list(row))
+    cur.executemany(insert_queries[1], budget_num_df.values.tolist())
 
 def insert_actualdata(cur, filepath):
     """loaclにある前処理後の実績データをテーブルに取り込む関数
@@ -102,7 +99,7 @@ def insert_actualdata(cur, filepath):
     """
     data_type = {
     'count_flag': 'object',
-    'serial_no': 'string',
+    'serial_no': 'object',
     'budget_no': 'object',
     'apply_unit': 'object',
     'exchange_no': 'object',
@@ -156,16 +153,16 @@ def insert_actualdata(cur, filepath):
     actual_num_df = df[[
         "serial_no",
         "budget_no",
-        "ex_serial_no",
+        "exchange_no",
         "year_month",
         "unit_price",
-        "actual_num"
+        "mold_num"
     ]]
     for row in actual_num_df.itertuples(name=None, index=False):
     # insert_queries[3]; INSERT query for actual mold number.
         cur.execute(insert_queries[3], list(row))
 
-def process_molddata(conn,cur, filepath, func):
+def process_molddata(conn, cur, filepath, func):
     """INSERT queryを実行する関数
     Args:
         conn:connectionクラス　conect to pastgresql at local

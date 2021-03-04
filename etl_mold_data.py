@@ -8,6 +8,7 @@ def main():
     conn, cur = connection_postgres()
     process_molddata(conn, cur, filepath=r".\data", func=insert_budgetdata)
     #process_molddata(conn, cur, filepath=r".\data", func=insert_actualdata)
+    cur.close()
     conn.close()
 
 def insert_budgetdata(cur, filepath):

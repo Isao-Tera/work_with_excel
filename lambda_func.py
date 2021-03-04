@@ -1,4 +1,5 @@
 import boto3
+import s3fs
 import os
 import sys
 import pandas as pd
@@ -9,7 +10,7 @@ from urllib.parse import unquote_plus
 s3_client = boto3.client("s3")
 
 # s3に保存されたファイルを読み込む
-path = "②【一般モールド】20-23年サイズ別明細(12.23展開).xlsx"
+s3_uri = "s3://lambdapoc-files"
 sheet_name = "21OB_MBP"
 header = 3
 
@@ -97,55 +98,37 @@ new_colname = [
     "mold_num"
 ]
 
+# Create low-lever service client instance with S3
+s3_client = boto3.client("s3")
+
 def lambda_handler(event, context):
-    for record in event["Records"]:
-        bucket = record["s3"]["bucket"]["name"]
-        key = unquote_plus(record['s3']['object']['key'])
-        tmpkey = key.replace("/", "")
-        download_path = '/tmp/{}{}'.format(uuid.uuid4(), tmpkey)
-        upload_path = '/tmp/resized-{}'.format(tmpkey)
-        s3_client.download_file(bucket, key, download_path)
-
-        df = load_excel(download_path, sheet_name, header)
-
-        converted_df = (df.pipe(select_columns, names, budget_mold_num)
-                      .pipe(filter_rows, units=units,count_flag=count_flag)
-                      .pipe(convert_long, convert_type="budget")
-                   )
-        # Rename column name for database
-        converted_df.columns = new_colname
-
-        # Output a csv file
-        converted_df.to_csv(f"{upload_path}/tidy_mold.csv", index=False)
-
-# Main Function
-def main():
-    df = load_excel(path, sheet_name, header)
-    
-    # tidying data using pipe
+    """S3イベント入力（Excelファイルの保存）を受け取り、前処理を実行後ターゲットバケットにCSVとして保存する"""
+    s3_file = s3_uri + "/" + "test.xlsx"
+    df = load_excel(s3_file, sheet_name, header)
     converted_df = (df.pipe(select_columns, names, budget_mold_num)
-                      .pipe(filter_rows, units=units,count_flag=count_flag)
-                      .pipe(convert_long, convert_type="budget")
+                    .pipe(filter_rows, units=units,count_flag=count_flag)
+                    .pipe(convert_long, convert_type="budget")
                    )
     # Rename column name for database
     converted_df.columns = new_colname
 
     # Output a csv file
-    converted_df.to_csv("tidy_mold.csv", index=False)
-
+    converted_df.to_csv(f"{s3_uri}/tidy_mold.csv", index=False)
 
 # Load data
-"""pandasを使ってExcelファイルを読み込む関数
-Args:
-    path: 文字列　S3のURL？
-    sheet_name: 文字列　予算や実績データがあるExcelシート名
-    header: 整数型　読み込みをスキップする行数
-Returns:
-    df: dataframe 
-"""
-def load_excel(path, sheet_name, header):
+def load_excel(url, sheet_name, header):
+    """pandasを使ってExcelファイルを読み込む関数
+    Desctiption:
+         S3 URLs require the s3fs library
+    Args:
+        url: 文字列　S3のURL like "s3://bucket-name/filename.xlsx"
+        sheet_name: 文字列　予算や実績データがあるExcelシート名
+        header: 整数型　読み込みをスキップする行数
+    Returns:
+        df: dataframe 
+    """
     df = pd.read_excel(
-        path,
+        url,
         sheet_name=sheet_name,
         header=header)
     return df

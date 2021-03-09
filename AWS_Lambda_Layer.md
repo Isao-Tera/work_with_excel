@@ -4,11 +4,10 @@ Lambdaはserverlessサービスだが、実際にはAWS Linux2上で動作する
 Pythonの関数をLambdaで実行したい場合、Pythonや基本モジュールはインストール済み。
 しかし、外部ライブラリ（Numpy, Pandas）はインストールされていないので、Lambda実行前にインストールする必要がある。
 Lambda関数ごとに外部ライブラリをインストールのはめんどくさい！！
-→　Layersという機能 [公式ドキュメント](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/configuration-layers.html)
-　　別々のLambda関数で__共通のライブラリを使用__できる！
+→　Layersという機能 [公式ドキュメント](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/configuration-layers.html)<br>別々のLambda関数で**共通のライブラリを使用**できる！
 
 ## How to make Layers
-- Overview
+- Overview<br>
     Lambdaが動作する同じ環境（AWS Linux2）に利用するPython Librariesをインストール、ライブラリをzip化、zip fileをLayersにアップロード
 1. Provision Lmazon Linux2
     - enough t2.micro
@@ -21,8 +20,9 @@ Lambda関数ごとに外部ライブラリをインストールのはめんど�
     * cp /mnt/<Windows drive letter>/path/my-key-pair.pem ~/WSL-path/my-key-pair.pem
 
 3. WSLを使用してEC2 Linuxインスタンスに接続
-    ssh -i /path/my-key-pair.pem ec2-user@public-ipv4-address
-    ssh -i lambda-layer.pem ec2-user@54.157.141.132
+    * ssh -i /path/my-key-pair.pem 
+    * ec2-user@public-ipv4-address
+    * ssh -i lambda-layer.pem ec2-user@54.157.141.132
 
     下記エラーが発生した場合、chmod 600 path/file.pem
     権限を与える、変更するにはchmodコマンドを使う
@@ -71,6 +71,6 @@ Lambda関数ごとに外部ライブラリをインストールのはめんど�
 9. zipファイルをS3に置いて、LambdaでLayerを作成する
 10. Lambda関数でLayerを設定する
 
-#　サックと外部ライブラリを使いたい！！
-    [先人の作ってくれたLayerを使う](https://github.com/keithrozario/Klayers)
-    [↑の説明](https://qiita.com/polarbear08/items/202752d5ffcb65595bd9)
+
+# サックと外部ライブラリを使いたい！！場合<br>
+[先人の作ってくれたLayerを使う](https://github.com/keithrozario/Klayers) & [その説明](https://qiita.com/polarbear08/items/202752d5ffcb65595bd9)

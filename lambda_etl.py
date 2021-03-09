@@ -121,8 +121,11 @@ def load_excel_fromS3(event_bucket, event_key, sheet_name=sheetname, header=head
         df: dataframe 
     """
     s3_client = boto3.client("s3")
-    obj = s3_client.get_object(Bucket=event_bucket, key=event_key)
 
+    # get_object() returns a dictionary type
+    obj = s3_client.get_object(Bucket=event_bucket, key=event_key)
+    
+    # 'Body': StreamingBody() object data
     df = pd.read_excel(
         obj["Body"],
         sheet_name=sheetname,
